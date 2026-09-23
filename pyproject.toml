@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "docmap"
-version = "0.3.3"
+version = "0.3.4"
 description = "Walk a Python project and emit a YAML manifest of every function and class, paired with its first docstring sentence."
 readme = "README.md"
 requires-python = ">=3.9"

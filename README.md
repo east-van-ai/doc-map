@@ -16,7 +16,7 @@ function and class signature, the first sentence of its docstring,
 and its 1-indexed line number, as minimal YAML. A few hundred lines
 standing in for a few thousand.
 
-After that, reading gets surgical. `vim +195 src/docmap/cli.py` drops
+After that, reading gets surgical. `vim +195 src/example/cli.py` drops
 a human on the exact def. An assistant does the same with a ranged
 read, instead of pulling the whole file in to find one function. You
 hand over the map, not the territory.
@@ -59,7 +59,7 @@ docmap print PATH [--include-private] [--include-tests] [--force]
 
 - `PATH` is the directory to walk. It comes before the flags, whose
   order among themselves is free.
-- Bare `docmap` prints this usage information, and so does
+- Bare `docmap` prints the usage banner, and so does
   `docmap print` on its own. Walking the current directory is an
   explicit `docmap print .`
 - `--include-private` includes single-underscore names. Dunders are
@@ -113,7 +113,7 @@ wherever your harness keeps skills, which for Claude Code means
 `~/.claude/skills/docmap/SKILL.md`, and the assistant will start
 fetching the map on its own.
 
-The `description` field at the top is the part that earns its keep.
+The `description` field at the top is the part that matters most.
 It is what the assistant matches against when deciding whether to
 reach for the tool, so it names situations, not features. Everything
 under it is only read once the skill has already been picked. Worth
@@ -127,10 +127,8 @@ knowing if you plan to write your own for something else.
 
 ## Use of AI
 
-This project is built with Artificial Intelligence (AI), deliberately
-and in the open. Code and documentation are written in collaboration
-with remote and local AI; design decisions, code review, and final
-judgement stay human.
+Code and documentation are written in collaboration with remote and local AI; design
+decisions, code review, semantic and auditory review, and final judgement stay human.
 
 ---
 

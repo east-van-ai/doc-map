@@ -5,8 +5,8 @@
 `docmap` requires Python 3.9 or newer and uses the standard library
 only, with no runtime dependencies (`ast`, `argparse`,
 `importlib.metadata`, `pathlib`, `re`, `sys`). The hand-rolled YAML
-writer exists precisely to keep it that way; do not add runtime
-dependencies. The GitHub CI matrix tests Python 3.9 through 3.14.
+writer exists precisely to keep it that way. The GitHub CI matrix
+tests Python 3.9 through 3.14.
 
 The whole implementation is one module, `src/docmap/cli.py`: pure
 functions with one job each, plus a `main()` that wires them into a
@@ -16,9 +16,10 @@ filesystem being read.
 One module is a decision, not a leftover. The usual split gives a CLI
 a file for the parser, a file per command, and a short entry point,
 which is what keeps a many-command tool readable. docmap has one
-command and one pipeline, and cutting that pipeline across three files
-would cost imports and indirection to buy back nothing. The file stays
-whole past the point where a line budget would call for the split.
+command that does work and one pipeline. Cutting that pipeline across
+three files would cost imports and indirection to buy back nothing.
+The file stays whole past the point where a line budget would call for
+the split.
 
 The walk pays the visible price. `walk_project` exits on the file
 ceiling rather than returning a code up to `main`, because the count
@@ -68,10 +69,10 @@ to make the wrong invocation loud and cheap instead of slow and silent.
    output.
 
 3. **Default filters.** VCS/cache/build/venv directories, hidden
-   files and directories, and test files are skipped by default (`SKIP_DIRS`
-   and `is_test_file` hold the lists). This is a guardrail in the small: the map is
-   meant to show a project's own public-ish surface, and every
-   filtered entry is noise that would drown it.
+   files and directories, and test files are skipped by default.
+   `SKIP_DIRS` and `is_test_file` hold the lists. This is a guardrail
+   in the small: the map is meant to show a project's own public-ish
+   surface, and every filtered entry is noise that would drown it.
 
    Membership in `SKIP_DIRS` is narrow on purpose. Only names that
    cannot plausibly hold hand-written source qualify: VCS, caches,
@@ -83,9 +84,11 @@ to make the wrong invocation loud and cheap instead of slow and silent.
 
 ## The Walk/Extract Pipeline
 
-`main()` runs: parse args -> grammar guards (a bare word, then the PATH
-slot) -> root checks (is a directory, root sniff) -> `walk_project` ->
-`dump_yaml` -> stdout.
+`main()` runs: a bare word -> parse args -> grammar guards -> root
+checks (is a directory, root sniff) -> `walk_project` -> `dump_yaml` ->
+stdout. The grammar guards read the slots of the command's row in
+`COMMANDS`, one row per command word. The bare-word check comes before
+the parser is built, so the banner never depends on argparse.
 
 - `walk_project` does a sorted `rglob("*.py")` under the root,
   applying the filters (`should_skip_dir`, `is_test_file`, hidden

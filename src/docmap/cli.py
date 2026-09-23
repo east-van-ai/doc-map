@@ -51,6 +51,7 @@ import argparse
 import ast
 import re
 import sys
+from collections import namedtuple
 from importlib import metadata
 from pathlib import Path
 
@@ -303,10 +304,9 @@ def walk_project(root: Path, include_private: bool, include_tests: bool):
     return file_entries
 
 
-PRINT_USAGE = "docmap print PATH [--include-private] [--include-tests] [--force]"
-VERSION_USAGE = "docmap version"
-
-PRINT_HELP = "Walk PATH and print the map to stdout"
+DOCMAP_HELP = "Walk PATH and print the map to stdout"
+DOCMAP_USAGE = "docmap print PATH [--include-private] [--include-tests] [--force]"
+DOCMAP_SLOTS = ("PATH",)
 
 
 def leading_paths(tokens):
@@ -321,9 +321,39 @@ def leading_paths(tokens):
 
 def usage_error(usage, message):
     """Report a command line docmap could not read, with the matching usage."""
+    sys.stdout.flush()
     print(f"docmap: {message}", file=sys.stderr)
     print(f"Usage: {usage}", file=sys.stderr)
     return EXIT_ERROR
+
+
+class ReadinessError(Exception):
+    """A command line docmap could read, naming a root it will not walk."""
+
+
+def readiness_error(message):
+    """Report what the run needed and did not find, with no usage line."""
+    sys.stdout.flush()
+    print(f"docmap: {message}", file=sys.stderr)
+    return EXIT_ERROR
+
+
+def run_print(path, args):
+    """Walk PATH and print the map, refusing a root that is not safe to walk."""
+    root = Path(path).resolve()
+    if not root.is_dir():
+        raise ReadinessError(f"{root} is not a directory")
+
+    if not args.force:
+        reason = smells_like_system_root(root)
+        if reason:
+            raise ReadinessError(
+                f"refusing to walk {root}: {reason}\n"
+                "if you really mean it, rerun with --force"
+            )
+
+    file_entries = walk_project(root, args.include_private, args.include_tests)
+    sys.stdout.write(dump_yaml(file_entries))
 
 
 def installed_version():
@@ -341,6 +371,31 @@ def version_line():
     cannot drift apart.
     """
     return f"{PROG} {installed_version()}"
+
+
+Command = namedtuple("Command", "bare usage slots action")
+"""A command word's answer to being typed alone, its usage line, the path slots it
+reads, and the action a full invocation runs.
+
+`bare` returns the text for the bare word; `action` runs the command. For `version`,
+both read from `version_line`, since running the command answers the bare word.
+"""
+
+# One command in one file means one document, so bare `print` gets the banner.
+COMMANDS = {
+    "print": Command(
+        lambda: __doc__.strip(),
+        DOCMAP_USAGE,
+        DOCMAP_SLOTS,
+        lambda paths, args: run_print(*paths, args),
+    ),
+    "version": Command(
+        version_line,
+        "docmap version",
+        (),
+        lambda paths, args: print(version_line()),
+    ),
+}
 
 
 def build_parser():
@@ -363,7 +418,7 @@ def build_parser():
     )
     subparsers = parser.add_subparsers(dest="command", metavar="COMMAND")
 
-    printer = subparsers.add_parser("print", help=PRINT_HELP, description=PRINT_HELP)
+    printer = subparsers.add_parser("print", help=DOCMAP_HELP, description=DOCMAP_HELP)
     printer.add_argument(
         "path", metavar="PATH", nargs="?", help="Project directory to walk"
     )
@@ -384,19 +439,16 @@ def build_parser():
 
 
 def main():
-    """Parse arguments, enforce the CLI grammar, and print the map.
-
-    A bare word is a question and gets documentation, exit 0. Any other
-    shortfall in the PATH slot is a slip and gets an error, exit 1.
-    Argparse keeps the vocabulary it owns: an unknown command, an unknown
-    flag, or a bad value, exiting 2.
-    """
+    """Parse arguments, run the matching command, return an exit code."""
     tokens = sys.argv[1:]
 
-    # A bare word is a question: bare `docmap`, or the command word alone.
-    # One command in one file means one document, so both get the banner.
-    if not tokens or tokens == ["print"]:
+    if not tokens:
         print(__doc__.strip())
+        return EXIT_OK
+
+    # A command word and nothing else is a question, and its own docs answer.
+    if len(tokens) == 1 and tokens[0] in COMMANDS:
+        print(COMMANDS[tokens[0]].bare())
         return EXIT_OK
 
     parser = build_parser()
@@ -405,39 +457,31 @@ def main():
     if any(extra.startswith("-") for extra in extras):
         parser.parse_args(tokens)  # argparse names the flag better, exit 2
 
-    # `version` takes no argument, so nothing about it is incomplete: it
-    # answers with the number rather than with the banner.
-    if args.command == "version":
-        strays = leading_paths(tokens[1:])
-        if strays:
-            return usage_error(
-                VERSION_USAGE, f"version takes no arguments: {strays[0]!r}"
-            )
-        print(version_line())
-        return EXIT_OK
-
     # Not args.path: what argparse resolves from a token after a flag varies
     # by interpreter, and the grammar should not.
     paths = leading_paths(tokens[1:])
-    if not paths:
-        return usage_error(PRINT_USAGE, "print needs PATH")
-    if len(paths) > 1:
-        return usage_error(PRINT_USAGE, f"print takes nothing after PATH: {paths[1]!r}")
 
-    root = Path(paths[0]).resolve()
-    if not root.is_dir():
-        print(f"docmap: {root} is not a directory", file=sys.stderr)
-        return EXIT_ERROR
+    command = COMMANDS[args.command]
 
-    if not args.force:
-        reason = smells_like_system_root(root)
-        if reason:
-            print(f"docmap: refusing to walk {root}: {reason}", file=sys.stderr)
-            print("if you really mean it, rerun with --force", file=sys.stderr)
-            return EXIT_ERROR
+    if len(paths) < len(command.slots):
+        needed = " and ".join(command.slots)
+        if len(command.slots) > 1:
+            needed = f"both {needed}"
+        return usage_error(command.usage, f"{args.command} needs {needed}")
 
-    file_entries = walk_project(root, args.include_private, args.include_tests)
-    sys.stdout.write(dump_yaml(file_entries))
+    if len(paths) > len(command.slots):
+        stray = paths[len(command.slots)]
+        last = command.slots[-1] if command.slots else "it"
+        return usage_error(
+            command.usage,
+            f"{args.command} takes nothing after {last}: {stray!r}",
+        )
+
+    try:
+        command.action(paths, args)
+    except ReadinessError as failure:
+        return readiness_error(str(failure))
+
     return EXIT_OK
 
 

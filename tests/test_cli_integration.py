@@ -114,7 +114,7 @@ def test_cli_version_on_the_command_is_argparse_error(run_cli, sample_project):
 def test_cli_version_with_a_stray_word_is_usage_error(run_cli):
     result = run_cli(["version", "extra"])
     assert result.returncode == 1
-    assert "version takes no arguments" in result.stderr
+    assert "version takes nothing after it" in result.stderr
     assert "'extra'" in result.stderr
     assert "Usage: docmap version" in result.stderr
     assert "docmap print" not in result.stderr
