@@ -8,10 +8,15 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+        os: [ubuntu-latest]
+        include:
+          # the floor is the Mac's stock 3.9, which setup-python ships no further than 24.04
+          - python-version: "3.9"
+            os: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5
@@ -33,4 +38,18 @@ jobs:
       - name: Lint
         run: |
           ruff check src tests
-          black --check src tests
+          ruff format --check src tests
+
+  # every run builds, so a branch push proves the package before any tag
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # a full version: setup-uv publishes no major tag after v7
+      - uses: astral-sh/setup-uv@v10.3.2
+
+      - name: Build
+        run: uv build

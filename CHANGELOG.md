@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-29
+
+### Added
+
+- Each file in the map carries its module docstring's first sentence, skipping a `#`
+  banner and a title line
+- Each file carries its line counts, split into code, blank, comments, and
+  docstrings, and a `total:` key closes the map
+- The agent skill installs doc-map on its own when it is missing
+
+### Changed
+
+- **Breaking:** the project is `doc-map`: the command, the distribution, and the
+  agent skill. The import package is `doc_map`. `docmap` no longer exists
+- **Breaking:** each file is a mapping of `doc`, `lines`, and `entries`, not a bare
+  list of entries. A file with no entries is no longer omitted
+- Bare `doc-map` prints the banner, then `doc-map --help`, which lists both version
+  spellings. Bare `doc-map print` prints its own page, then its flags
+- The banner's prose is plain text below a `#` signature block
+- Help prints no colour on Python 3.14
+- The agent skill moved to `skills/doc-map/SKILL.md`, a folder ready to copy whole
+- Install with `uv tool install`, or with pipx
+- The agent skill's description leads with when to reach for it: before reading a
+  Python project's code. README introduces the skill right after Why
+- `docs/CLI.md` folded into the agent skill, which now carries the grammar table and
+  the error format, and `docs/DESIGN.md`. README links the documents from its end
+
+### Fixed
+
+- Flags no longer abbreviate: `--inc` is an unknown flag, not an ambiguous one
+
 ## [0.3.4] - 2026-09-23
 
 ### Changed

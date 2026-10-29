@@ -1,5 +1,5 @@
 """
-Shared fixtures and helpers for docmap.cli tests.
+Shared fixtures and helpers for doc_map.cli tests.
 """
 
 import subprocess
@@ -10,11 +10,11 @@ import pytest
 
 @pytest.fixture
 def run_cli():
-    """Return a callable that invokes `python -m docmap.cli` via subprocess."""
+    """Return a callable that invokes `python -m doc_map.cli` via subprocess."""
 
     def _run_cli(args, input_text=None, cwd=None):
         return subprocess.run(
-            [sys.executable, "-m", "docmap.cli", *args],
+            [sys.executable, "-m", "doc_map.cli", *args],
             input=input_text,
             capture_output=True,
             text=True,

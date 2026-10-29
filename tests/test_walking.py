@@ -1,5 +1,5 @@
 """
-Unit tests for the filter/guardrail/walk layer of docmap.cli:
+Unit tests for the filter/guardrail/walk layer of doc_map.cli:
 is_test_file, should_skip_dir, smells_like_system_root, walk_project.
 """
 
@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from docmap import cli
-from docmap.cli import (
+from doc_map import cli
+from doc_map.cli import (
     is_test_file,
     should_skip_dir,
     smells_like_system_root,
@@ -90,7 +90,19 @@ def test_walk_project_basic(tmp_path):
     assert "mod.py" in entries
     assert "test_mod.py" not in entries
     assert not any("__pycache__" in k for k in entries)
-    assert entries["mod.py"][0]["doc"] == "Say hello."
+    assert entries["mod.py"]["entries"][0]["doc"] == "Say hello."
+
+
+def test_walk_project_maps_module_doc_and_line_counts(tmp_path):
+    (tmp_path / "mod.py").write_text('"""A module."""\n\n# note\nX = 1\n')
+
+    entries = walk_project(tmp_path, include_private=False, include_tests=False)
+
+    assert entries["mod.py"] == {
+        "doc": "A module.",
+        "lines": {"code": 1, "blank": 1, "comments": 1, "docstrings": 1},
+        "entries": [],
+    }
 
 
 def test_walk_project_walks_a_data_package(tmp_path):
@@ -102,7 +114,7 @@ def test_walk_project_walks_a_data_package(tmp_path):
     entries = walk_project(tmp_path, include_private=False, include_tests=False)
 
     assert "data/loader.py" in entries
-    assert entries["data/loader.py"][0]["doc"] == "Load a fixture."
+    assert entries["data/loader.py"]["entries"][0]["doc"] == "Load a fixture."
 
 
 def test_walk_project_include_tests(tmp_path):

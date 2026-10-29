@@ -4,9 +4,8 @@
 .github/**/*.yaml
 .gitignore
 .weed-out-ignore
-docs/CLI.md
 docs/DESIGN.md
-docs/SKILL.md
+skills/doc-map/SKILL.md
 src/**/*.py
 tests/*.py
 CHANGELOG.md
