@@ -56,12 +56,11 @@ doc-map print PATH [--include-private] [--include-tests] [--force]
 | `doc-map` | banner, then help | 0 |
 | `doc-map print` | `print`'s page | 0 |
 | `doc-map print PATH` | map on stdout | 0 |
-| `doc-map print` and flags, no PATH | usage error | 1 |
+| `doc-map print --force` | usage error, flags but no PATH | 1 |
 | `doc-map print --force PATH` | usage error, PATH comes first | 1 |
-| `doc-map print A B` | usage error, nothing after PATH | 1 |
-| `doc-map print PATH`, PATH not a directory | error | 1 |
+| `doc-map print PATH extra` | usage error, nothing after PATH | 1 |
+| `doc-map print no/such/dir` | error, PATH is not a directory | 1 |
 | `doc-map print PATH --nope` | argparse rejects the flag | 2 |
-| `doc-map --src-root .` | argparse rejects the command | 2 |
 
 A bare word is a question, so it prints documentation and exits 0. The test
 is the word by itself: once any other token is present, the command line is
@@ -138,14 +137,14 @@ only its presence. If it is missing, install it without asking. It needs
 Python 3.9 or newer and has no runtime dependencies:
 
 ```bash
-uv tool install "git+https://github.com/east-van-ai/doc-map.git"
+uv tool install doc-map
 ```
 
 uv fetches its own Python. Without uv, use pipx, which uses the Python
 already on the machine:
 
 ```bash
-pipx install "git+https://github.com/east-van-ai/doc-map.git"
+pipx install doc-map
 ```
 
 If neither uv nor pipx is on PATH, install neither. Say so, and leave that

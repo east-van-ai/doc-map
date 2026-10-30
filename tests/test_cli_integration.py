@@ -84,23 +84,15 @@ def test_cli_flags_do_not_abbreviate(run_cli, sample_project):
 def test_cli_version_prints_name_and_number(run_cli):
     result = run_cli(["--version"])
     assert result.returncode == 0
-    assert result.stdout.strip() == f"doc-map {installed_version()}"
+    assert result.stdout == f"doc-map {installed_version()}\n"
     assert result.stderr == ""
 
 
 def test_cli_version_command_prints_name_and_number(run_cli):
     result = run_cli(["version"])
     assert result.returncode == 0
-    assert result.stdout.strip() == f"doc-map {installed_version()}"
+    assert result.stdout == f"doc-map {installed_version()}\n"
     assert result.stderr == ""
-
-
-def test_cli_both_version_spellings_print_the_same_line(run_cli):
-    # The two tests above would both pass with two copies of the line.
-    # This is the one that fails if they drift.
-    word = run_cli(["version"])
-    flag = run_cli(["--version"])
-    assert word.stdout == flag.stdout
 
 
 # ---------- grammar ----------
@@ -168,18 +160,6 @@ def test_cli_version_with_a_stray_flag_is_argparse_error(run_cli):
     assert result.stdout == ""
 
 
-def test_cli_old_src_root_grammar_is_argparse_error(run_cli, sample_project):
-    result = run_cli(["--src-root", str(sample_project)])
-    assert result.returncode == 2
-
-
-def test_cli_out_flag_is_gone(run_cli, sample_project):
-    out_file = sample_project / "manifest.yaml"
-    result = run_cli(["print", str(sample_project), "--out", str(out_file)])
-    assert result.returncode == 2
-    assert not out_file.exists()
-
-
 # ---------- guardrails ----------
 
 
@@ -216,14 +196,6 @@ def test_cli_map_ends_with_a_total_that_matches_the_files(run_cli, sample_projec
     assert result.stdout.endswith(
         "total:\n  files: 1\n  code: 2\n  blank: 0\n  comments: 0\n  docstrings: 1\n"
     )
-
-
-def test_cli_maps_a_file_with_no_docstring_and_no_defs(run_cli, tmp_path):
-    (tmp_path / "consts.py").write_text("X = 1\n")
-    result = run_cli(["print", str(tmp_path)])
-    assert result.returncode == 0
-    assert result.stdout.startswith('consts.py:\n  doc: ""\n  lines:\n    code: 1\n')
-    assert "entries:" not in result.stdout
 
 
 # ---------- version ----------

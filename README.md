@@ -87,14 +87,14 @@ dependencies: standard library only. Tested in CI on Python 3.9
 through 3.15.
 
 ```bash
-uv tool install "git+https://github.com/east-van-ai/doc-map.git"
+uv tool install doc-map
 ```
 
 uv fetches its own Python. Or install it with pipx, which uses the
 Python already on the machine:
 
 ```bash
-pipx install "git+https://github.com/east-van-ai/doc-map.git"
+pipx install doc-map
 ```
 
 ## Usage

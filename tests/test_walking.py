@@ -129,6 +129,7 @@ def test_walk_project_skips_unparseable_file(tmp_path, capsys):
     entries = walk_project(tmp_path, include_private=False, include_tests=False)
     assert "broken.py" not in entries
     assert "ok.py" in entries
+    assert capsys.readouterr().err.startswith(f"# skipped {tmp_path / 'broken.py'}: ")
 
 
 def test_walk_project_max_py_files_ceiling(tmp_path, monkeypatch):

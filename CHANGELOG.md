@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-30
+
+### Added
+
+- doc-map installs from PyPI by name, with `uv tool install doc-map` or
+  `pipx install doc-map`
+
+### Changed
+
+- The agent skill's exit table lists only literal command lines, and the `--src-root`
+  row is gone
+- The tests run every command README, DESIGN, and the agent skill show, and check
+  each exit code against what the doc states
+
 ## [0.4.0] - 2026-10-29
 
 ### Added
